@@ -122,8 +122,11 @@ main(int argc, char* argv[])
 	  }
 	  break;
 	case '?':
+	  /* getopt already printed a message */
+	  std::cout << "\n\n";
+	  
 	  print_usage();
-	  return 1; /* getopt already printed a message */
+	  return 1;
 	default:
 	  abort();
 	}
