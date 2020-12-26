@@ -1,3 +1,5 @@
+hdump
+hdump.o
 .deps
 Makefile
 Makefile.in

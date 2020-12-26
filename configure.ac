@@ -1,4 +1,4 @@
-AC_INIT([hdump], [1.0.1], [bert@stanzabird.nl], [], [https://github.com/stanzabird/hdump/])
+AC_INIT([hdump], [1.0.3], [bert@stanzabird.nl], [], [https://github.com/stanzabird/hdump/])
 AC_CONFIG_SRCDIR(hdump.cc)
 AC_PREREQ(2.59)
 AM_INIT_AUTOMAKE

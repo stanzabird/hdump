@@ -24,13 +24,14 @@ get_term_size (void)
   return 0;
 }
 
-
+// manually specify the width...
+int width{0};
 
 
 void
-hdump_istream(std::istream& is) {
+hdump_istream(std::istream& is, int width) {
   using char_t = unsigned char;
-  const auto n = (term_cols - 1) / 4;  
+  const auto n = (width - 1) / 4;  
   is >> std::noskipws;
   
   while (is)
@@ -62,13 +63,16 @@ hdump_istream(std::istream& is) {
 }
 void
 hdump(std::string name) {
+  auto i = term_cols;
   if (name.empty()) {
-    term_cols = 80; term_lines = 25;    
-    hdump_istream(std::cin);
+    i = 80;
+    if (width) i = width;
+    hdump_istream(std::cin,i);
   }
   else {
     std::ifstream ifs{name};
-    hdump_istream(ifs);
+    if (width) i = width;
+    hdump_istream(ifs,i);
   }
 }
 
@@ -109,7 +113,7 @@ main(int argc, char* argv[])
       switch (c)
 	{
 	case 'w':		// --width,-w
-	  std::cout << "[debug] option --width=\"" << optarg << "\" specified.\n";
+	  width = std::stoi(optarg);
 	  break;
 	case 'h':		// --help,-h
 	  {
