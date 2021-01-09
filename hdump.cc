@@ -12,6 +12,10 @@
 #include <unistd.h>
 
 
+
+
+
+
 // getting the terminal width...
 int term_cols, term_lines;
 int
@@ -24,12 +28,26 @@ get_term_size (void)
   return 0;
 }
 
+// these I find most convinient
+inline int get_term_width() { struct winsize ts; ioctl(STDIN_FILENO, TIOCGWINSZ, &ts); return ts.ws_col; }
+inline int get_term_lines() { struct winsize ts; ioctl(STDIN_FILENO, TIOCGWINSZ, &ts); return ts.ws_row; }
+
+
 // manually specify the width...
 int width{0};
 
 
+
+
+
+
+
 void
-hdump_istream(std::istream& is, int width) {
+hdump_istream(std::istream& is,
+	      std::ostream& os = std::cout,
+	      int width = get_term_width() ? get_term_width() : 80
+	      )
+{
   using char_t = unsigned char;
   const auto n = (width - 1) / 4;  
   is >> std::noskipws;
@@ -48,33 +66,42 @@ hdump_istream(std::istream& is, int width) {
       std::ostringstream oss_hex;
       for (auto c : chars)
 	oss_hex << ' ' << std::hex << std::setw(2) << std::setfill('0') << (unsigned int) c;
+
       std::ostringstream oss_printable;
       for (auto c : chars)
 	if (isprint(c))
 	  oss_printable.put( (char) c );
 	else
 	  oss_printable.put( '.' );
+      
       std::ostringstream oss_white;
       for (auto i = 3*(n-chars.size())+1; i > 0; i--)
 	oss_white << ' ';
-      
-      std::cout << oss_hex.str() << oss_white.str() << oss_printable.str() << std::endl;
+
+      if (chars.size())
+	  os << oss_hex.str() << oss_white.str() << oss_printable.str() << std::endl;
     }
 }
 void
 hdump(std::string name) {
-  auto i = term_cols;
+  auto i = get_term_width();
   if (name.empty()) {
     i = 80;
     if (width) i = width;
-    hdump_istream(std::cin,i);
+    hdump_istream(std::cin,std::cout,i);
   }
   else {
     std::ifstream ifs{name};
     if (width) i = width;
-    hdump_istream(ifs,i);
+    hdump_istream(ifs,std::cout,i);
   }
 }
+
+
+
+
+
+
 
 
 void
