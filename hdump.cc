@@ -10,6 +10,12 @@
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <cstdio>
+#include <cstdlib>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 
 
@@ -28,10 +34,27 @@ get_term_size (void)
   return 0;
 }
 
-// these I find most convinient
+// these I find the easiest
 inline int get_term_width() { struct winsize ts; ioctl(STDIN_FILENO, TIOCGWINSZ, &ts); return ts.ws_col; }
 inline int get_term_lines() { struct winsize ts; ioctl(STDIN_FILENO, TIOCGWINSZ, &ts); return ts.ws_row; }
 
+
+
+// more getting terminal width things
+// this is for when its in a pipe
+int
+get_term_size3()
+{
+  auto fd = open("/dev/tty",O_RDONLY);
+  if (fd) {
+    struct winsize ts;
+    ioctl(fd,TIOCGWINSZ,&ts);
+    term_cols = ts.ws_col;
+    term_lines = ts.ws_row;
+    close(fd);
+  }
+  return 0;
+}
 
 // manually specify the width...
 int width{0};
@@ -43,10 +66,7 @@ int width{0};
 
 
 void
-hdump_istream(std::istream& is,
-	      std::ostream& os = std::cout,
-	      int width = get_term_width() ? get_term_width() : 80
-	      )
+hdump_istream(std::istream& is, std::ostream& os, int width)
 {
   using char_t = unsigned char;
   const auto n = (width - 1) / 4;  
@@ -84,15 +104,28 @@ hdump_istream(std::istream& is,
 }
 void
 hdump(std::string name) {
+  // get_term_size2();
   auto i = get_term_width();
   if (name.empty()) {
     i = 80;
-    if (width) i = width;
+    if (width) i = width;	// --width
+    
     hdump_istream(std::cin,std::cout,i);
   }
   else {
-    std::ifstream ifs{name};
-    if (width) i = width;
+    if (width) i = width;	// --width
+    
+    std::ifstream ifs;
+    
+    // https://stackoverflow.com/questions/17337602/how-to-get-error-message-when-ifstream-open-fails
+    ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+
+    try {
+      ifs.open(name);
+    } catch (std::system_error& e) {
+      std::cerr << name << ": " << e.code().message() << std::endl;
+      return;
+    }
     hdump_istream(ifs,std::cout,i);
   }
 }
