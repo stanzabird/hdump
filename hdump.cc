@@ -65,7 +65,7 @@ int width{0};
 
 
 
-
+std::string _name;
 void
 hdump_istream(std::istream& is, std::ostream& os, int width)
 {
@@ -79,9 +79,17 @@ hdump_istream(std::istream& is, std::ostream& os, int width)
       
       for (auto i = n; i > 0; i--) {
 	char_t c;
-	is >> c;
-	if (is)
-	  chars.push_back(c);
+	try {
+	  is >> c;
+	  if (is)
+	    chars.push_back(c);
+	}
+	catch (std::ios_base::failure& e) {
+	  if (!e.code()) {
+	    std::cerr << _name << ": " << strerror(errno) << std::endl;
+	    exit(EXIT_FAILURE);
+	  }
+	}
       }
 
       std::ostringstream oss_hex;
@@ -105,6 +113,7 @@ hdump_istream(std::istream& is, std::ostream& os, int width)
 }
 void
 hdump(std::string name) {
+  _name = name;
   // get_term_size2();
   auto i = get_term_width();
   if (name.empty()) {
@@ -128,9 +137,8 @@ hdump(std::string name) {
     catch (std::ios_base::failure& e)
       {
 	std::cerr << name << ": " << strerror(errno) << std::endl;
-	return;
-      }
-    
+	exit(EXIT_FAILURE);
+      }    
   }
 }
 
