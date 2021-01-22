@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -115,18 +116,21 @@ hdump(std::string name) {
   else {
     if (width) i = width;	// --width
     
-    std::ifstream ifs;
     
     // https://stackoverflow.com/questions/17337602/how-to-get-error-message-when-ifstream-open-fails
+    std::ifstream ifs;
     ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-
-    try {
-      ifs.open(name);
-    } catch (std::system_error& e) {
-      std::cerr << name << ": " << e.code().message() << std::endl;
-      return;
-    }
-    hdump_istream(ifs,std::cout,i);
+    try
+      {
+	ifs.open(name);
+	hdump_istream(ifs, std::cout, i);
+      }
+    catch (std::ios_base::failure& e)
+      {
+	std::cerr << name << ": " << strerror(errno) << std::endl;
+	return;
+      }
+    
   }
 }
 
